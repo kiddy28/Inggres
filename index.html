@@ -8,6 +8,7 @@
   <!-- Font Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
   
   <!-- Canvas Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -50,13 +51,26 @@
   <!-- ===================== LANDING PAGE ===================== -->
   <div id="view-landing" class="view active">
     <div class="wrap">
-      <header class="nav-inner">
-        <div class="logo">Sinahub <span class="logo-tag">Edu</span></div>
-        <div class="nav-menu">
-          <button class="btn btn-ghost" onclick="scrollToCatalog()">Cek Paket Sinahu</button>
-          <button class="btn btn-secondary" onclick="openLeaderboardView()">🏆 Lihat Hasil Sinahu</button>
-        </div>
-      </header>
+     <header class="nav-inner">
+  <div class="brand-container">
+    <!-- Gambar Logo -->
+    <img src="icon.png" alt="Logo Sinahub" class="brand-logo-img">
+    
+    <!-- Area Teks Judul, Tag Edu, & Tagline -->
+    <div class="brand-text-wrap">
+      <div class="brand-title-row">
+        <span class="brand-title">Sinahub</span>
+        <span class="logo-tag">Edu</span>
+      </div>
+      <span class="brand-tagline">Belajar, Bertumbuh, Tanpa Batas</span>
+    </div>
+  </div>
+
+  <div class="nav-menu">
+    <button class="btn btn-ghost" onclick="scrollToCatalog()">Cek Paket Sinahu</button>
+    <button class="btn btn-secondary" onclick="openLeaderboardView()">🏆 Lihat Hasil Sinahu</button>
+  </div>
+</header>
 
       <section class="hero-section">
         <div class="hero-content">
