@@ -23,7 +23,7 @@
     <!-- Header Page -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
       <div>
-        <h2 style="margin: 0;">🏆 Rekap Hasil & Peringkat Peserta</h2>
+        <h2 style="margin: 0;">🏆 Rekap Josjis Peserta</h2>
         <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 14px;">Daftar nilai peserta berdasarkan jenjang latihan</p>
       </div>
       <button class="btn" onclick="showView('view-landing')">← Kembali ke Beranda</button>
@@ -36,6 +36,8 @@
       <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD46', event)">SD 4-6</button>
       <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMP', event)">SMP</button>
       <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMA', event)">SMA</button>
+      <button class="tab-btn lb-tab" onclick="filterLeaderboard('UMUM', event)">Umum (JOSJIS)</button>
+</div>
     </div>
 
     <!-- Tampilan Tabel Hasil -->
@@ -52,7 +54,7 @@
         <div class="logo">Sinahub <span class="logo-tag">Edu</span></div>
         <div class="nav-menu">
           <button class="btn btn-ghost" onclick="scrollToCatalog()">Cek Paket Sinahu</button>
-          <button class="btn btn-secondary" onclick="openLeaderboardView()">🏆 Lihat Hasil Peserta</button>
+          <button class="btn btn-secondary" onclick="openLeaderboardView()">🏆 Lihat Hasil Sinahu</button>
         </div>
       </header>
 
@@ -60,7 +62,7 @@
         <div class="hero-content">
           <span class="hero-badge">✨ Platform Belajar Bahasa Inggris paling Josjis</span>
           <h1>Latihan Soal Lebih Seru & Paham Sampai ke Akar!</h1>
-          <p>Dirancang khusus buat jenjang SD, SMP, sampai SMA. Sinahu tata bahasa & kosakata jadi JosJis lewat latihan interaktif lengkap dengan audio pengucapan & gambar visual.</p>
+          <p>Dirancang buat semua jenjang mulai SD, SMP, SMA, sampai Umum. Sinahu tata bahasa & kosakata jadi JosJis lewat latihan interaktif lengkap dengan audio pengucapan & gambar visual.</p>
           
           <div class="hero-stats">
             <div class="stat-item">
@@ -80,7 +82,7 @@
       </section>
 
       <section class="features-section">
-        <h2 class="section-title">Kenapa Belajar di Sinahub?</h2>
+        <h2 class="section-title">Kenapa Belajar di Sinahub? KARENA JOSJIS</h2>
         <div class="features-grid">
           <div class="feature-card">
             <div class="feat-icon">🔊</div>
@@ -110,6 +112,11 @@
           <button class="tab-btn" onclick="filterCatalog('SD46', event)">🟢 SD Besar (Kelas 4-6)</button>
           <button class="tab-btn" onclick="filterCatalog('SMP', event)">🔵 SMP (Kelas 7-9)</button>
           <button class="tab-btn" onclick="filterCatalog('SMA', event)">🟣 SMA (Kelas 10-12)</button>
+       <button class="tab-btn tab-btn-hardcore" onclick="filterCatalog('UMUM', event)">
+          <span class="fire-icon">🔥</span> 
+          <span class="glow-text">UMUM (Awas Kepala Berasap)</span> 
+          <span class="skull-badge">☠️ HARD</span>
+      </button>
         </div>
 
         <div class="catalog-grid" id="catalogGrid"></div>
@@ -204,7 +211,7 @@
   <div id="view-result" class="view">
     <div class="wrap">
       <div class="score-card">
-        <h2>Hasil Latihanmu</h2>
+        <h2>Hasil Sinahumu</h2>
         <div class="score-circle" id="scoreAccuracy">100%</div>
         <p id="scoreStats" class="score-subtext"></p>
         
@@ -233,15 +240,15 @@
     <h3>Yakin Ingin Keluar?</h3>
     <p>Progres kuis yang sedang kamu kerjakan akan hilang dan tidak tersimpan.</p>
     <div class="confirm-actions">
-      <button class="btn btn-ghost" onclick="closeExitModal()">Lanjutkan Kuis</button>
-      <button class="btn btn-red" onclick="confirmExit()">Ya, Keluar</button>
+      <button class="btn btn-ghost" onclick="closeExitModal()">Lanjutkan Gasskeun</button>
+      <button class="btn btn-red" onclick="confirmExit()">Ya, Byee</button>
     </div>
   </div>
 </div>
 <!-- ===================== MODAL REGISTRASI ===================== -->
 <div id="regModal" class="modal-overlay">
   <div class="modal-box">
-    <h2 style="margin-top:0;">Form Registrasi Peserta</h2>
+    <h2 style="margin-top:0;">Isi Identitas dulu biar Josjis</h2>
     <p id="regPkgTitle" style="color:var(--ink-soft); font-size:14px; margin-bottom:16px;"></p>
     
     <form onsubmit="submitRegistration(event)">
@@ -259,7 +266,7 @@
 
       <!-- Pilihan Mode -->
       <div style="margin-bottom: 20px; text-align: left;">
-        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 8px;">Pilih Mode Latihan</label>
+        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 8px;">Pilih Mode Sinahu</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <label class="mode-card">
             <input type="radio" name="quizMode" value="belajar" checked>
@@ -275,12 +282,13 @@
       </div>
 
       <div style="display: flex; gap: 8px;">
-        <button type="button" class="btn" onclick="closeRegModal()" style="background:#eee; color:#333;">Batal</button>
-        <button type="submit" class="btn btn-primary" style="flex:1;">Mulai Kerjakan 🚀</button>
+        <button type="button" class="btn" onclick="closeRegModal()" style="background:#eee; color:#333;">Skip</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">GASSKEUNN!! 🚀</button>
       </div>
     </form>
   </div>
 </div>
+  
   
 <!-- Library Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
