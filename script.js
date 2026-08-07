@@ -9,8 +9,8 @@ const packages = [
   { id: 'sd-basic', title: 'Grammar Dasar & Vocabulary', level: 'SD46', count: 20, desc: 'Latihan dasar kata kerja & penyusunan kalimat' },
   { id: 'smp-tenses', title: 'Simple Present & Past Tense', level: 'SMP', count: 20, desc: 'Latihan tenses untuk percakapan harian' },
   { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 20, desc: 'Persiapan ujian & pemahaman tingkat lanjut' },
-  { id: 'toefl-structure', title: 'TOEFL: Structure & Written Expression', level: 'UMUM', count: 20, desc: 'Latihan pola tata bahasa baku & error identification' },
-  { id: 'toefl-reading', title: 'TOEFL: Academic Vocabulary & Reading', level: 'UMUM', count: 20, desc: 'Latihan bacaan akademik & analisa makna kata' }
+  { id: 'toefl-structure', title: 'TOEFL: Structure & Written Expression', level: 'TOEFL_STRUCTURE', count: 20, desc: 'Latihan pola tata bahasa baku & error identification' },
+  { id: 'toefl-reading', title: 'TOEFL: Academic Vocabulary & Reading', level: 'TOEFL_READING', count: 20, desc: 'Latihan bacaan akademik & analisa makna kata' }
 ];
 
 /* ===================== STATE ===================== */
@@ -84,12 +84,16 @@ function renderCatalog(filter = 'all') {
   const grid = document.getElementById('catalogGrid');
   if (!grid) return;
 
-  const filtered = filter === 'all' ? packages : packages.filter(p => p.level === filter);
+  const filtered = filter === 'all' 
+    ? packages 
+    : filter === 'UMUM'
+      ? packages.filter(p => p.level.startsWith('TOEFL_'))
+      : packages.filter(p => p.level === filter);
 
   grid.innerHTML = filtered.map(p => {
-    const levelBadgeClass = p.level.toLowerCase();
+    const levelBadgeClass = p.level.toLowerCase().replace('_', '-');
     let levelLabel = p.level.replace('SD13','SD 1-3').replace('SD46','SD 4-6');
-    if (p.level === 'UMUM') levelLabel = '🔥 UMUM / TOEFL';
+    if (p.level.startsWith('TOEFL_')) levelLabel = '🔥 UMUM / TOEFL';
 
     return `
       <div class="pkg-card">
@@ -186,7 +190,7 @@ function renderQuestion() {
   document.getElementById('qProgress').textContent = `${qIndex + 1}/${currentQuestions.length}`;
   
   let levelTagText = `${currentPkg.level.replace('SD13','SD Class 1-3')} Level`;
-  if (currentPkg.level === 'UMUM') levelTagText = '🔥 TOEFL / UMUM Level';
+  if (currentPkg.level.startsWith('TOEFL_')) levelTagText = '🔥 TOEFL / UMUM Level';
   document.getElementById('qLevelTag').textContent = levelTagText;
 
   const imgWrap = document.getElementById('qImageWrap');
@@ -201,6 +205,7 @@ function renderQuestion() {
   const qTextEl = document.getElementById('qText');
   qTextEl.textContent = q.text;
   qTextEl.style.fontSize = currentFontSize + 'px';
+  qTextEl.style.whiteSpace = 'pre-line'; // Agar paragraf/kutipan bacaan tercetak rapi
 
   updateBookmarkUI();
 
@@ -458,7 +463,11 @@ async function fetchLeaderboardData(levelFilter = 'all') {
     let query = supabaseClient.from('quiz_results').select('*').order('created_at', { ascending: false });
 
     if (levelFilter !== 'all') {
-      query = query.eq('package_level', levelFilter);
+      if (levelFilter === 'UMUM') {
+        query = query.or('package_level.eq.TOEFL_STRUCTURE,package_level.eq.TOEFL_READING,package_level.eq.UMUM');
+      } else {
+        query = query.eq('package_level', levelFilter);
+      }
     }
 
     const { data, error } = await query;
@@ -494,14 +503,14 @@ async function fetchLeaderboardData(levelFilter = 'all') {
             });
             
             let badgeText = (item.package_level || '').replace('SD13','SD 1-3').replace('SD46','SD 4-6');
-            if (item.package_level === 'UMUM') badgeText = '🔥 UMUM';
+            if ((item.package_level || '').startsWith('TOEFL_') || item.package_level === 'UMUM') badgeText = '🔥 UMUM';
 
             return `
               <tr style="border-bottom:1px solid var(--rule);">
                 <td style="padding:12px 10px; font-size:12px; color:var(--ink-soft);">${dateStr}</td>
                 <td style="padding:12px 10px; font-weight:bold;">${item.user_name}</td>
                 <td style="padding:12px 10px;">${item.user_class}</td>
-                <td style="padding:12px 10px;"><span class="badge-level badge-${(item.package_level || '').toLowerCase()}">${badgeText}</span></td>
+                <td style="padding:12px 10px;"><span class="badge-level badge-${(item.package_level || '').toLowerCase().replace('_','-')}">${badgeText}</span></td>
                 <td style="padding:12px 10px; text-transform:capitalize;">${item.quiz_mode}</td>
                 <td style="padding:12px 10px; text-align:center;">${item.score}/${item.total_questions}</td>
                 <td style="padding:12px 10px; text-align:center; font-weight:bold; color:${item.accuracy >= 70 ? 'var(--green)' : 'var(--red)'};">${item.accuracy}%</td>
@@ -576,7 +585,7 @@ function renderRecapData(filter = 'all') {
 
     return `
       <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid var(--rule);">
-        <p style="font-weight:800; margin:0 0 8px;">${i + 1}. ${q.text} ${isBookmarked ? '🔖' : ''}</p>
+        <p style="font-weight:800; margin:0 0 8px; white-space:pre-line;">${i + 1}. ${q.text} ${isBookmarked ? '🔖' : ''}</p>
         <p style="margin:0; font-size:14px; color:${isCorrect ? 'var(--green)' : 'var(--red)'};">
           Jawabanmu: ${ansText}
         </p>
