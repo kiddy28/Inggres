@@ -10,46 +10,6 @@ const packages = [
   { id: 'smp-tenses', title: 'Simple Present & Past Tense', level: 'SMP', count: 20, desc: 'Latihan tenses untuk percakapan harian' },
   { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 20, desc: 'Persiapan ujian & pemahaman tingkat lanjut' }
 ];
-/* ===================== DATA PAKET & SOAL ===================== */
-const packages = [
-  { id: 'sd-vocab', title: 'Kosakata Sehari-hari (Daily Vocab)', level: 'SD13', count: 5, desc: 'Mengenal nama buah, hewan, & benda sekitar' },
-  { id: 'sd-basic', title: 'Grammar Dasar & Vocabulary', level: 'SD46', count: 5, desc: 'Latihan dasar kata kerja & penyusunan kalimat' },
-  { id: 'smp-tenses', title: 'Simple Present & Past Tense', level: 'SMP', count: 5, desc: 'Latihan tenses untuk percakapan harian' },
-  { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 5, desc: 'Persiapan ujian & pemahaman tingkat lanjut' }
-];
-
-const questionBank = {
-  'sd-vocab': [
-    {
-      text: "Look at the picture! I eat an ___ in the morning.",
-      image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400", // Contoh Gambar Apel
-      hint: "Buah berwarna merah dan rasanya manis.",
-      options: ["Apple", "Banana", "Cat", "House"],
-      correct: 0,
-      explain: [
-        { text: "BENAR! 'Apple' adalah buah apel.", example: "An apple a day keeps the doctor away." },
-        { text: "Salah. 'Banana' artinya pisang.", example: "Monkeys love bananas." },
-        { text: "Salah. 'Cat' adalah hewan kucing.", example: "The cat is sleeping." },
-        { text: "Salah. 'House' artinya rumah.", example: "This is my house." }
-      ]
-    },
-    {
-      text: "Look at the animal! An elephant is very ___.",
-      image: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=400", // Contoh Gambar Gajah
-      hint: "Gajah adalah hewan yang berukuran sangat besar.",
-      options: ["Small", "Big", "Thin", "Short"],
-      correct: 1,
-      explain: [
-        { text: "Salah. 'Small' artinya kecil.", example: "An ant is small." },
-        { text: "BENAR! 'Big' artinya besar.", example: "An elephant has a big body." },
-        { text: "Salah. 'Thin' artinya kurus/tipis.", example: "Paper is thin." },
-        { text: "Salah. 'Short' artinya pendek.", example: "Grass is short." }
-      ]
-    }
-  ]
-};
-
-const defaultQuestions = questionBank['sd-vocab'];
 
 /* ===================== STATE ===================== */
 let currentPkg = null;
@@ -65,13 +25,24 @@ let timerOn = false;
 let timerSeconds = 0;
 let timerInterval = null;
 
+/* ===================== HELPER FUNCTIONS ===================== */
+// Fungsi Mengacak Array & Memotong Jadi 20 Soal
+function getRandom20(arraySoal) {
+  const shuffled = [...arraySoal];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, 20);
+}
+
 /* ===================== TEXT TO SPEECH (AUDIO) ===================== */
 function speakText(text) {
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel(); // Hentikan audio sebelumnya
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
-    utterance.rate = 0.9; // Kecepatan pengucapan agak lambat untuk siswa
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
   } else {
     alert("Browser kamu tidak mendukung audio pengucapan.");
@@ -102,6 +73,8 @@ function filterCatalog(level, event) {
 
 function renderCatalog(filter = 'all') {
   const grid = document.getElementById('catalogGrid');
+  if (!grid) return;
+
   const filtered = filter === 'all' ? packages : packages.filter(p => p.level === filter);
 
   grid.innerHTML = filtered.map(p => `
@@ -124,14 +97,14 @@ async function startQuiz(pkgId) {
   document.getElementById('optionsWrap').innerHTML = '';
 
   try {
-    // 1. Ambil seluruh bank soal sesuai level (misal 'SMA') dari Supabase
+    // 1. Ambil seluruh bank soal sesuai level dari Supabase
     const { data: allQuestions, error } = await supabaseClient
       .from('questions')
       .select('*')
       .eq('level', currentPkg.level);
 
     if (error || !allQuestions || allQuestions.length === 0) {
-      alert('Gagal memuat soal dari database atau soal belum diisi!');
+      alert('Gagal memuat soal dari database atau soal jenjang ini belum diisi!');
       showView('view-landing');
       return;
     }
@@ -158,6 +131,7 @@ async function startQuiz(pkgId) {
     showView('view-landing');
   }
 }
+
 function renderQuestion() {
   const q = currentQuestions[qIndex];
   document.getElementById('qProgress').textContent = `${qIndex + 1}/${currentQuestions.length}`;
@@ -180,7 +154,7 @@ function renderQuestion() {
   updateBookmarkUI();
 
   document.getElementById('hintBox').style.display = 'none';
-  document.getElementById('hintBox').textContent = q.hint;
+  document.getElementById('hintBox').textContent = q.hint || 'Tidak ada petunjuk untuk soal ini.';
 
   const state = userAnswers[qIndex] || { selected: null, checked: false };
   const currentEliminated = eliminatedOptions[qIndex] || new Set();
@@ -249,7 +223,7 @@ function toggleEliminate(optIdx) {
   } else {
     eliminatedOptions[qIndex].add(optIdx);
     if (userAnswers[qIndex]?.selected === optIdx) {
-      userAnswers[qIndex].selected = null; // Unselect jika opsi yang dicoret sedang dipilih
+      userAnswers[qIndex].selected = null;
     }
   }
   renderQuestion();
@@ -278,9 +252,9 @@ function renderPembahasan() {
       <div class="peh-example-box">
         <div class="peh-header-row">
           <span class="example-tag">💡 Contoh Kalimat</span>
-          <button class="btn-audio" onclick="speakText('${item.example.replace(/'/g, "\\'")}')" style="width:28px;height:28px;font-size:12px;">🔊</button>
+          <button class="btn-audio" onclick="speakText('${(item.example || '').replace(/'/g, "\\'")}')" style="width:28px;height:28px;font-size:12px;">🔊</button>
         </div>
-        <p class="example-text">"${item.example}"</p>
+        <p class="example-text">"${item.example || '-'}"</p>
       </div>
     </div>
   `).join('');
@@ -377,13 +351,6 @@ function updateBookmarkUI() {
   }
 }
 
-function exitQuiz() {
-  if (confirm("Yakin ingin keluar? Progres kuis akan hilang.")) {
-    stopTimerInterval();
-    showView('view-landing');
-  }
-}
-
 function finishQuiz() {
   stopTimerInterval();
   showView('view-result');
@@ -445,9 +412,6 @@ function restartQuiz() {
   startQuiz(currentPkg.id);
 }
 
-// Inisialisasi
-renderCatalog();
-
 /* ===================== CUSTOM EXIT MODAL LOGIC ===================== */
 function exitQuiz() {
   openExitModal();
@@ -463,13 +427,11 @@ function closeExitModal() {
 
 function confirmExit() {
   closeExitModal();
-
-  /* Fungsi Mengacak Array & Memotong Jadi 20 Soal */
-function getRandom20(arraySoal) {
-  const shuffled = [...arraySoal];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, 20);
+  stopTimerInterval();
+  showView('view-landing');
 }
+
+/* ===================== INISIALISASI APLIKASI ===================== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderCatalog();
+});
