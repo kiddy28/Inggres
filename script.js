@@ -25,13 +25,13 @@ let bookmarkedQuestions = new Set();
 let userName = '';
 let userClass = '';
 let quizMode = 'belajar'; // 'belajar' | 'tes'
+let activeLeaderboardFilter = 'all';
 
 // Countdown Timer State
 let timerSeconds = 900; // 15 menit = 900 detik
 let timerInterval = null;
 
 /* ===================== HELPER FUNCTIONS ===================== */
-// Fungsi Mengacak Array & Memotong N Soal
 function getRandomN(arraySoal, count) {
   const shuffled = [...arraySoal];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -101,7 +101,7 @@ function startQuiz(pkgId) {
   
   const regModal = document.getElementById('regModal');
   if (regModal) regModal.classList.add('open');
-  else initQuizEngine(); // Fallback jika modal tidak terpasang di HTML
+  else initQuizEngine();
 }
 
 function closeRegModal() {
@@ -125,12 +125,10 @@ async function initQuizEngine() {
   currentPkg = packages.find(p => p.id === pendingPkgId);
   showView('view-quiz');
   
-  // Tampilan loading sementara
   document.getElementById('qText').textContent = 'Memuat soal dari database...';
   document.getElementById('optionsWrap').innerHTML = '';
 
   try {
-    // 1. Ambil seluruh bank soal sesuai level dari Supabase
     const { data: allQuestions, error } = await supabaseClient
       .from('questions')
       .select('*')
@@ -142,28 +140,24 @@ async function initQuizEngine() {
       return;
     }
 
-    // 2. Ambil 10 soal (Mode Belajar) atau 20 soal (Mode Tes)
     const questionLimit = quizMode === 'belajar' ? 10 : 20;
     currentQuestions = getRandomN(allQuestions, questionLimit);
 
-    // 3. Reset State Kuis
     qIndex = 0;
     userAnswers = {};
     eliminatedOptions = {};
     bookmarkedQuestions.clear();
 
-    // 4. Pengaturan Timer Berdasarkan Mode
     const timerValEl = document.getElementById('timerVal');
     if (quizMode === 'tes') {
-      timerSeconds = 900; // Reset ke 15 Menit
+      timerSeconds = 900;
       if (timerValEl) timerValEl.style.display = 'inline-block';
       startTimerInterval();
     } else {
       stopTimerInterval();
-      if (timerValEl) timerValEl.style.display = 'none'; // Sembunyikan timer di Mode Belajar
+      if (timerValEl) timerValEl.style.display = 'none';
     }
 
-    // 5. Render Soal Pertama
     renderQuestion();
 
   } catch (err) {
@@ -178,7 +172,6 @@ function renderQuestion() {
   document.getElementById('qProgress').textContent = `${qIndex + 1}/${currentQuestions.length}`;
   document.getElementById('qLevelTag').textContent = `${currentPkg.level.replace('SD13','SD Class 1-3')} Level`;
 
-  // Render Gambar Soal jika ada
   const imgWrap = document.getElementById('qImageWrap');
   const imgEl = document.getElementById('qImage');
   if (q.image) {
@@ -200,13 +193,11 @@ function renderQuestion() {
   const state = userAnswers[qIndex] || { selected: null, checked: false };
   const currentEliminated = eliminatedOptions[qIndex] || new Set();
 
-  // Parse Opsi jika tersimpan sebagai String JSON dari Supabase
   let optionsArray = q.options;
   if (typeof optionsArray === 'string') {
     try { optionsArray = JSON.parse(optionsArray); } catch (e) { optionsArray = []; }
   }
 
-  // Render Opsi + Tombol Eliminer
   const optWrap = document.getElementById('optionsWrap');
   optWrap.innerHTML = optionsArray.map((opt, i) => {
     let classes = ['opt'];
@@ -387,7 +378,125 @@ function jumpToQuestion(i) {
   renderQuestion();
 }
 
-/* ===================== EXTRA TOOLS & RESULT ===================== */
+/* ===================== FINISH & SAVE TO SUPABASE ===================== */
+async function finishQuiz() {
+  stopTimerInterval();
+  showView('view-result');
+  let correctCount = 0;
+
+  currentQuestions.forEach((q, i) => {
+    if (userAnswers[i]?.selected === q.correct) correctCount++;
+  });
+
+  const accuracy = Math.round((correctCount / currentQuestions.length) * 100);
+  document.getElementById('scoreAccuracy').textContent = accuracy + '%';
+  
+  const userGreeting = userName ? `Kerja bagus, <strong>${userName}</strong> (${userClass})!` : '';
+  document.getElementById('scoreStats').innerHTML = `${userGreeting}<br>Kamu menjawab benar <strong>${correctCount}</strong> dari <strong>${currentQuestions.length}</strong> soal.`;
+
+  // === SIMPAN DATA REKAP KE SUPABASE ===
+  try {
+    await supabaseClient.from('quiz_results').insert([
+      {
+        user_name: userName || 'Tanpa Nama',
+        user_class: userClass || '-',
+        package_level: currentPkg.level,
+        package_title: currentPkg.title,
+        quiz_mode: quizMode,
+        score: correctCount,
+        total_questions: currentQuestions.length,
+        accuracy: accuracy
+      }
+    ]);
+  } catch (err) {
+    console.error('Gagal menyimpan rekap ke Supabase:', err);
+  }
+
+  if (accuracy >= 80 && typeof confetti === 'function') {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+  }
+
+  renderRecapData('all');
+}
+
+/* ===================== LEADERBOARD / HASIL PESERTA ===================== */
+function openLeaderboardView() {
+  showView('view-leaderboard');
+  fetchLeaderboardData('all');
+}
+
+function filterLeaderboard(level, event) {
+  activeLeaderboardFilter = level;
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
+  if (event) event.target.classList.add('active');
+  fetchLeaderboardData(level);
+}
+
+async function fetchLeaderboardData(levelFilter = 'all') {
+  const container = document.getElementById('leaderboardContent');
+  container.innerHTML = `<p style="text-align:center; color: var(--ink-soft);">Memuat data hasil...</p>`;
+
+  try {
+    let query = supabaseClient.from('quiz_results').select('*').order('created_at', { ascending: false });
+
+    if (levelFilter !== 'all') {
+      query = query.eq('package_level', levelFilter);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      container.innerHTML = `<p style="text-align:center; color: var(--red);">Gagal mengambil data dari server.</p>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `<p style="text-align:center; color: var(--ink-soft); padding: 20px 0;">Belum ada hasil peserta untuk jenjang ini.</p>`;
+      return;
+    }
+
+    // Render Tabel
+    container.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:14px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--rule); color:var(--ink-soft);">
+            <th style="padding:10px;">Tanggal</th>
+            <th style="padding:10px;">Nama</th>
+            <th style="padding:10px;">Kelas</th>
+            <th style="padding:10px;">Jenjang</th>
+            <th style="padding:10px;">Mode</th>
+            <th style="padding:10px; text-align:center;">Skor</th>
+            <th style="padding:10px; text-align:center;">Nilai</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(item => {
+            const dateStr = new Date(item.created_at).toLocaleDateString('id-ID', {
+              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+            });
+            return `
+              <tr style="border-bottom:1px solid var(--rule);">
+                <td style="padding:12px 10px; font-size:12px; color:var(--ink-soft);">${dateStr}</td>
+                <td style="padding:12px 10px; font-weight:bold;">${item.user_name}</td>
+                <td style="padding:12px 10px;">${item.user_class}</td>
+                <td style="padding:12px 10px;"><span class="badge-level badge-${item.package_level.toLowerCase()}">${item.package_level.replace('SD13','SD 1-3').replace('SD46','SD 4-6')}</span></td>
+                <td style="padding:12px 10px; text-transform:capitalize;">${item.quiz_mode}</td>
+                <td style="padding:12px 10px; text-align:center;">${item.score}/${item.total_questions}</td>
+                <td style="padding:12px 10px; text-align:center; font-weight:bold; color:${item.accuracy >= 70 ? 'var(--green)' : 'var(--red)'};">${item.accuracy}%</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p style="text-align:center; color: var(--red);">Terjadi kesalahan koneksi.</p>`;
+  }
+}
+
+/* ===================== EXTRA TOOLS & RECAP ===================== */
 function changeFontSize(delta) {
   currentFontSize = Math.min(Math.max(currentFontSize + delta, 16), 28);
   document.getElementById('qText').style.fontSize = currentFontSize + 'px';
@@ -414,29 +523,6 @@ function updateBookmarkUI() {
     btn.classList.remove('active');
     btn.innerHTML = '🔖 <span>Tandai Soal</span>';
   }
-}
-
-function finishQuiz() {
-  stopTimerInterval();
-  showView('view-result');
-  let correctCount = 0;
-
-  currentQuestions.forEach((q, i) => {
-    if (userAnswers[i]?.selected === q.correct) correctCount++;
-  });
-
-  const accuracy = Math.round((correctCount / currentQuestions.length) * 100);
-  document.getElementById('scoreAccuracy').textContent = accuracy + '%';
-  
-  // Tampilkan ucapan personal dengan nama dan kelas peserta
-  const userGreeting = userName ? `Kerja bagus, <strong>${userName}</strong> (${userClass})!` : '';
-  document.getElementById('scoreStats').innerHTML = `${userGreeting}<br>Kamu menjawab benar <strong>${correctCount}</strong> dari <strong>${currentQuestions.length}</strong> soal.`;
-
-  if (accuracy >= 80 && typeof confetti === 'function') {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-  }
-
-  renderRecapData('all');
 }
 
 let activeRecapFilter = 'all';
