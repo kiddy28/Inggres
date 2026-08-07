@@ -9,6 +9,9 @@ const packages = [
   { id: 'sd-basic', title: 'Grammar Dasar & Vocabulary', level: 'SD46', count: 20, desc: 'Latihan dasar kata kerja & penyusunan kalimat' },
   { id: 'smp-tenses', title: 'Simple Present & Past Tense', level: 'SMP', count: 20, desc: 'Latihan tenses untuk percakapan harian' },
   { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 20, desc: 'Persiapan ujian & pemahaman tingkat lanjut' }
+  { id: 'toefl-structure', title: 'TOEFL: Structure & Written Expression', level: 'UMUM', count: 20, desc: 'Latihan pola tata bahasa baku & error identification' },
+  { id: 'toefl-reading', title: 'TOEFL: Academic Vocabulary & Reading', level: 'UMUM', count: 20, desc: 'Latihan bacaan akademik & analisa makna kata' }
+];
 ];
 
 /* ===================== STATE ===================== */
@@ -73,13 +76,14 @@ function scrollToCatalog() {
 function filterCatalog(level, event) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   if (event) event.target.classList.add('active');
-  renderCatalog(level);
+  (level);
 }
 
 function renderCatalog(filter = 'all') {
   const grid = document.getElementById('catalogGrid');
   if (!grid) return;
-
+// Pengganti badge level sederhana:
+  const levelBadgeClass = p.level.toLowerCase(); // 'umum' akan otomatis jadi 'badge-umum'
   const filtered = filter === 'all' ? packages : packages.filter(p => p.level === filter);
 
   grid.innerHTML = filtered.map(p => `
