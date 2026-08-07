@@ -8,10 +8,9 @@ const packages = [
   { id: 'sd-vocab', title: 'Kosakata Sehari-hari (Daily Vocab)', level: 'SD13', count: 20, desc: 'Mengenal nama buah, hewan, & benda sekitar' },
   { id: 'sd-basic', title: 'Grammar Dasar & Vocabulary', level: 'SD46', count: 20, desc: 'Latihan dasar kata kerja & penyusunan kalimat' },
   { id: 'smp-tenses', title: 'Simple Present & Past Tense', level: 'SMP', count: 20, desc: 'Latihan tenses untuk percakapan harian' },
-  { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 20, desc: 'Persiapan ujian & pemahaman tingkat lanjut' }
+  { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 20, desc: 'Persiapan ujian & pemahaman tingkat lanjut' },
   { id: 'toefl-structure', title: 'TOEFL: Structure & Written Expression', level: 'UMUM', count: 20, desc: 'Latihan pola tata bahasa baku & error identification' },
   { id: 'toefl-reading', title: 'TOEFL: Academic Vocabulary & Reading', level: 'UMUM', count: 20, desc: 'Latihan bacaan akademik & analisa makna kata' }
-];
 ];
 
 /* ===================== STATE ===================== */
@@ -59,7 +58,9 @@ function speakText(text) {
 
 function speakQuestionText() {
   const q = currentQuestions[qIndex];
-  speakText(q.text.replace('___', 'blank'));
+  if (q && q.text) {
+    speakText(q.text.replace('___', 'blank'));
+  }
 }
 
 /* ===================== NAVIGATION & CATALOG ===================== */
@@ -74,26 +75,31 @@ function scrollToCatalog() {
 }
 
 function filterCatalog(level, event) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  if (event) event.target.classList.add('active');
-  (level);
+  document.querySelectorAll('.filter-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
+  renderCatalog(level);
 }
 
 function renderCatalog(filter = 'all') {
   const grid = document.getElementById('catalogGrid');
   if (!grid) return;
-// Pengganti badge level sederhana:
-  const levelBadgeClass = p.level.toLowerCase(); // 'umum' akan otomatis jadi 'badge-umum'
+
   const filtered = filter === 'all' ? packages : packages.filter(p => p.level === filter);
 
-  grid.innerHTML = filtered.map(p => `
-    <div class="pkg-card">
-      <span class="badge-level badge-${p.level.toLowerCase()}">${p.level.replace('SD13','SD 1-3').replace('SD46','SD 4-6')}</span>
-      <h3 style="margin:0; font-size:18px;">${p.title}</h3>
-      <p style="margin:0; font-size:13.5px; color:var(--ink-soft);">${p.desc}</p>
-      <button class="btn btn-primary" onclick="startQuiz('${p.id}')">Mulai Latihan</button>
-    </div>
-  `).join('');
+  grid.innerHTML = filtered.map(p => {
+    const levelBadgeClass = p.level.toLowerCase();
+    let levelLabel = p.level.replace('SD13','SD 1-3').replace('SD46','SD 4-6');
+    if (p.level === 'UMUM') levelLabel = '🔥 UMUM / TOEFL';
+
+    return `
+      <div class="pkg-card">
+        <span class="badge-level badge-${levelBadgeClass}">${levelLabel}</span>
+        <h3 style="margin:10px 0 6px; font-size:18px;">${p.title}</h3>
+        <p style="margin:0 0 16px; font-size:13.5px; color:var(--ink-soft);">${p.desc}</p>
+        <button class="btn btn-primary" style="width:100%;" onclick="startQuiz('${p.id}')">Mulai Latihan</button>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ===================== MODAL REGISTRASI ===================== */
@@ -101,7 +107,7 @@ function startQuiz(pkgId) {
   pendingPkgId = pkgId;
   const pkg = packages.find(p => p.id === pkgId);
   const titleEl = document.getElementById('regPkgTitle');
-  if (titleEl) titleEl.textContent = `Paket: ${pkg.title}`;
+  if (titleEl && pkg) titleEl.textContent = `Paket: ${pkg.title}`;
   
   const regModal = document.getElementById('regModal');
   if (regModal) regModal.classList.add('open');
@@ -127,6 +133,8 @@ function submitRegistration(event) {
 /* ===================== QUIZ ENGINE ===================== */
 async function initQuizEngine() {
   currentPkg = packages.find(p => p.id === pendingPkgId);
+  if (!currentPkg) return;
+  
   showView('view-quiz');
   
   document.getElementById('qText').textContent = 'Memuat soal dari database...';
@@ -173,8 +181,13 @@ async function initQuizEngine() {
 
 function renderQuestion() {
   const q = currentQuestions[qIndex];
+  if (!q) return;
+
   document.getElementById('qProgress').textContent = `${qIndex + 1}/${currentQuestions.length}`;
-  document.getElementById('qLevelTag').textContent = `${currentPkg.level.replace('SD13','SD Class 1-3')} Level`;
+  
+  let levelTagText = `${currentPkg.level.replace('SD13','SD Class 1-3')} Level`;
+  if (currentPkg.level === 'UMUM') levelTagText = '🔥 TOEFL / UMUM Level';
+  document.getElementById('qLevelTag').textContent = levelTagText;
 
   const imgWrap = document.getElementById('qImageWrap');
   const imgEl = document.getElementById('qImage');
@@ -431,13 +444,14 @@ function openLeaderboardView() {
 
 function filterLeaderboard(level, event) {
   activeLeaderboardFilter = level;
-  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
-  if (event) event.target.classList.add('active');
+  document.querySelectorAll('#view-leaderboard .lb-tab').forEach(b => b.classList.remove('active'));
+  if (event) event.currentTarget.classList.add('active');
   fetchLeaderboardData(level);
 }
 
 async function fetchLeaderboardData(levelFilter = 'all') {
   const container = document.getElementById('leaderboardContent');
+  if (!container) return;
   container.innerHTML = `<p style="text-align:center; color: var(--ink-soft);">Memuat data hasil...</p>`;
 
   try {
@@ -478,12 +492,16 @@ async function fetchLeaderboardData(levelFilter = 'all') {
             const dateStr = new Date(item.created_at).toLocaleDateString('id-ID', {
               day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             });
+            
+            let badgeText = (item.package_level || '').replace('SD13','SD 1-3').replace('SD46','SD 4-6');
+            if (item.package_level === 'UMUM') badgeText = '🔥 UMUM';
+
             return `
               <tr style="border-bottom:1px solid var(--rule);">
                 <td style="padding:12px 10px; font-size:12px; color:var(--ink-soft);">${dateStr}</td>
                 <td style="padding:12px 10px; font-weight:bold;">${item.user_name}</td>
                 <td style="padding:12px 10px;">${item.user_class}</td>
-                <td style="padding:12px 10px;"><span class="badge-level badge-${item.package_level.toLowerCase()}">${item.package_level.replace('SD13','SD 1-3').replace('SD46','SD 4-6')}</span></td>
+                <td style="padding:12px 10px;"><span class="badge-level badge-${(item.package_level || '').toLowerCase()}">${badgeText}</span></td>
                 <td style="padding:12px 10px; text-transform:capitalize;">${item.quiz_mode}</td>
                 <td style="padding:12px 10px; text-align:center;">${item.score}/${item.total_questions}</td>
                 <td style="padding:12px 10px; text-align:center; font-weight:bold; color:${item.accuracy >= 70 ? 'var(--green)' : 'var(--red)'};">${item.accuracy}%</td>
@@ -533,7 +551,7 @@ let activeRecapFilter = 'all';
 function switchRecapTab(filter, event) {
   activeRecapFilter = filter;
   document.querySelectorAll('.recap-tab').forEach(t => t.classList.remove('active'));
-  if (event) event.target.classList.add('active');
+  if (event) event.currentTarget.classList.add('active');
   renderRecapData(filter);
 }
 
