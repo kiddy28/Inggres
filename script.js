@@ -12,6 +12,7 @@ const packages = [
 ];
 
 /* ===================== STATE ===================== */
+let pendingPkgId = null;
 let currentPkg = null;
 let currentQuestions = [];
 let qIndex = 0;
@@ -20,20 +21,24 @@ let eliminatedOptions = {}; // Format: { 0: Set([2, 3]) }
 let currentFontSize = 20;
 let bookmarkedQuestions = new Set();
 
-// Timer State
-let timerOn = false;
-let timerSeconds = 0;
+// State Peserta & Mode
+let userName = '';
+let userClass = '';
+let quizMode = 'belajar'; // 'belajar' | 'tes'
+
+// Countdown Timer State
+let timerSeconds = 900; // 15 menit = 900 detik
 let timerInterval = null;
 
 /* ===================== HELPER FUNCTIONS ===================== */
-// Fungsi Mengacak Array & Memotong Jadi 20 Soal
-function getRandom20(arraySoal) {
+// Fungsi Mengacak Array & Memotong N Soal
+function getRandomN(arraySoal, count) {
   const shuffled = [...arraySoal];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled.slice(0, 20);
+  return shuffled.slice(0, count);
 }
 
 /* ===================== TEXT TO SPEECH (AUDIO) ===================== */
@@ -87,9 +92,37 @@ function renderCatalog(filter = 'all') {
   `).join('');
 }
 
+/* ===================== MODAL REGISTRASI ===================== */
+function startQuiz(pkgId) {
+  pendingPkgId = pkgId;
+  const pkg = packages.find(p => p.id === pkgId);
+  const titleEl = document.getElementById('regPkgTitle');
+  if (titleEl) titleEl.textContent = `Paket: ${pkg.title}`;
+  
+  const regModal = document.getElementById('regModal');
+  if (regModal) regModal.classList.add('open');
+  else initQuizEngine(); // Fallback jika modal tidak terpasang di HTML
+}
+
+function closeRegModal() {
+  const regModal = document.getElementById('regModal');
+  if (regModal) regModal.classList.remove('open');
+}
+
+function submitRegistration(event) {
+  event.preventDefault();
+  
+  userName = document.getElementById('regName').value;
+  userClass = document.getElementById('regClass').value;
+  quizMode = document.querySelector('input[name="quizMode"]:checked').value;
+
+  closeRegModal();
+  initQuizEngine();
+}
+
 /* ===================== QUIZ ENGINE ===================== */
-async function startQuiz(pkgId) {
-  currentPkg = packages.find(p => p.id === pkgId);
+async function initQuizEngine() {
+  currentPkg = packages.find(p => p.id === pendingPkgId);
   showView('view-quiz');
   
   // Tampilan loading sementara
@@ -109,20 +142,28 @@ async function startQuiz(pkgId) {
       return;
     }
 
-    // 2. Acak 100 soal tersebut dan ambil 20 soal saja
-    currentQuestions = getRandom20(allQuestions);
+    // 2. Ambil 10 soal (Mode Belajar) atau 20 soal (Mode Tes)
+    const questionLimit = quizMode === 'belajar' ? 10 : 20;
+    currentQuestions = getRandomN(allQuestions, questionLimit);
 
     // 3. Reset State Kuis
     qIndex = 0;
     userAnswers = {};
     eliminatedOptions = {};
     bookmarkedQuestions.clear();
-    
-    // Reset Timer
-    timerSeconds = 0;
-    if (timerOn) startTimerInterval();
 
-    // 4. Render Soal Pertama
+    // 4. Pengaturan Timer Berdasarkan Mode
+    const timerValEl = document.getElementById('timerVal');
+    if (quizMode === 'tes') {
+      timerSeconds = 900; // Reset ke 15 Menit
+      if (timerValEl) timerValEl.style.display = 'inline-block';
+      startTimerInterval();
+    } else {
+      stopTimerInterval();
+      if (timerValEl) timerValEl.style.display = 'none'; // Sembunyikan timer di Mode Belajar
+    }
+
+    // 5. Render Soal Pertama
     renderQuestion();
 
   } catch (err) {
@@ -159,9 +200,15 @@ function renderQuestion() {
   const state = userAnswers[qIndex] || { selected: null, checked: false };
   const currentEliminated = eliminatedOptions[qIndex] || new Set();
 
+  // Parse Opsi jika tersimpan sebagai String JSON dari Supabase
+  let optionsArray = q.options;
+  if (typeof optionsArray === 'string') {
+    try { optionsArray = JSON.parse(optionsArray); } catch (e) { optionsArray = []; }
+  }
+
   // Render Opsi + Tombol Eliminer
   const optWrap = document.getElementById('optionsWrap');
-  optWrap.innerHTML = q.options.map((opt, i) => {
+  optWrap.innerHTML = optionsArray.map((opt, i) => {
     let classes = ['opt'];
     if (state.checked) {
       if (i === q.correct) classes.push('is-correct');
@@ -241,11 +288,21 @@ function renderPembahasan() {
   const q = currentQuestions[qIndex];
   const list = document.getElementById('pembahasanList');
 
-  list.innerHTML = q.explain.map((item, i) => `
+  let optionsArray = q.options;
+  if (typeof optionsArray === 'string') {
+    try { optionsArray = JSON.parse(optionsArray); } catch (e) { optionsArray = []; }
+  }
+
+  let explainArray = q.explain;
+  if (typeof explainArray === 'string') {
+    try { explainArray = JSON.parse(explainArray); } catch (e) { explainArray = []; }
+  }
+
+  list.innerHTML = explainArray.map((item, i) => `
     <div class="peh-card ${i === q.correct ? 'ok' : 'no'}">
       <div class="peh-header-row">
-        <strong>(${String.fromCharCode(65 + i)}) ${q.options[i]} ${i === q.correct ? '✅' : ''}</strong>
-        <button class="btn-audio" onclick="speakText('${q.options[i]}')" title="Dengarkan kata">🔊</button>
+        <strong>(${String.fromCharCode(65 + i)}) ${optionsArray[i] || ''} ${i === q.correct ? '✅' : ''}</strong>
+        <button class="btn-audio" onclick="speakText('${(optionsArray[i] || '').replace(/'/g, "\\'")}')" title="Dengarkan kata">🔊</button>
       </div>
       <p style="margin:6px 0; font-size:13.5px; color:var(--ink);">${item.text}</p>
       
@@ -262,30 +319,37 @@ function renderPembahasan() {
   document.getElementById('pembahasanWrap').classList.add('open');
 }
 
-/* ===================== TIMER FUNCTIONS ===================== */
-function toggleTimer() {
-  timerOn = !timerOn;
-  const sw = document.getElementById('timerSwitch');
-  const val = document.getElementById('timerVal');
-  sw.classList.toggle('on', timerOn);
-  val.style.display = timerOn ? 'inline' : 'none';
-
-  if (timerOn) startTimerInterval();
-  else stopTimerInterval();
-}
-
+/* ===================== COUNTDOWN TIMER FUNCTIONS ===================== */
 function startTimerInterval() {
   stopTimerInterval();
+  updateTimerDisplay();
+
   timerInterval = setInterval(() => {
-    timerSeconds++;
-    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-    const s = String(timerSeconds % 60).padStart(2, '0');
-    document.getElementById('timerVal').textContent = `${m}:${s}`;
+    timerSeconds--;
+    updateTimerDisplay();
+
+    if (timerSeconds <= 0) {
+      stopTimerInterval();
+      alert('Waktu 15 menit telah habis! Kuis akan otomatis dikumpulkan.');
+      finishQuiz();
+    }
   }, 1000);
 }
 
 function stopTimerInterval() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+  const s = String(timerSeconds % 60).padStart(2, '0');
+  const timerValEl = document.getElementById('timerVal');
+  if (timerValEl) {
+    timerValEl.textContent = `⏱️ ${m}:${s}`;
+  }
 }
 
 /* ===================== NAVIGASI & PALETTE ===================== */
@@ -342,6 +406,7 @@ function toggleBookmark() {
 
 function updateBookmarkUI() {
   const btn = document.getElementById('bookmarkBtn');
+  if (!btn) return;
   if (bookmarkedQuestions.has(qIndex)) {
     btn.classList.add('active');
     btn.innerHTML = '🔖 <span>Tersimpan</span>';
@@ -362,7 +427,10 @@ function finishQuiz() {
 
   const accuracy = Math.round((correctCount / currentQuestions.length) * 100);
   document.getElementById('scoreAccuracy').textContent = accuracy + '%';
-  document.getElementById('scoreStats').textContent = `Kamu menjawab benar ${correctCount} dari ${currentQuestions.length} soal.`;
+  
+  // Tampilkan ucapan personal dengan nama dan kelas peserta
+  const userGreeting = userName ? `Kerja bagus, <strong>${userName}</strong> (${userClass})!` : '';
+  document.getElementById('scoreStats').innerHTML = `${userGreeting}<br>Kamu menjawab benar <strong>${correctCount}</strong> dari <strong>${currentQuestions.length}</strong> soal.`;
 
   if (accuracy >= 80 && typeof confetti === 'function') {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -388,7 +456,15 @@ function renderRecapData(filter = 'all') {
 
     const ans = userAnswers[i];
     const isCorrect = ans && ans.selected === q.correct;
-    const ansText = ans && ans.selected !== null ? `(${String.fromCharCode(65 + ans.selected)}) ${q.options[ans.selected]}` : 'Belum dijawab';
+    
+    let optionsArray = q.options;
+    if (typeof optionsArray === 'string') {
+      try { optionsArray = JSON.parse(optionsArray); } catch (e) { optionsArray = []; }
+    }
+
+    const ansText = ans && ans.selected !== null 
+      ? `(${String.fromCharCode(65 + ans.selected)}) ${optionsArray[ans.selected] || ''}` 
+      : 'Belum dijawab';
 
     return `
       <div style="background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid var(--rule);">
@@ -409,7 +485,7 @@ function toggleRecap() {
 }
 
 function restartQuiz() {
-  startQuiz(currentPkg.id);
+  initQuizEngine();
 }
 
 /* ===================== CUSTOM EXIT MODAL LOGIC ===================== */
