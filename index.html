@@ -17,36 +17,36 @@
 <body>
 
   <!-- ===================== VIEW REKAP HASIL PESERTA ===================== -->
-<div id="view-leaderboard" class="view">
-  <div style="max-width: 900px; margin: 0 auto; padding: 20px 10px;">
-    
-    <!-- Header Page -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-      <div>
-        <h2 style="margin: 0;">🏆 Rekap Josjis Peserta</h2>
-        <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 14px;">Daftar nilai peserta berdasarkan jenjang latihan</p>
+  <div id="view-leaderboard" class="view">
+    <div style="max-width: 900px; margin: 0 auto; padding: 20px 10px;">
+      
+      <!-- Header Page -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0;">🏆 Rekap Josjis Peserta</h2>
+          <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 14px;">Daftar nilai peserta berdasarkan jenjang latihan</p>
+        </div>
+        <button class="btn" onclick="showView('view-landing')">← Kembali ke Beranda</button>
       </div>
-      <button class="btn" onclick="showView('view-landing')">← Kembali ke Beranda</button>
-    </div>
 
-    <!-- Tab Filter Jenjang -->
-    <div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; pb-2;">
-      <button class="tab-btn lb-tab active" onclick="filterLeaderboard('all', event)">Semua</button>
-      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD13', event)">SD 1-3</button>
-      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD46', event)">SD 4-6</button>
-      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMP', event)">SMP</button>
-      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMA', event)">SMA</button>
-      <button class="tab-btn lb-tab" onclick="filterLeaderboard('UMUM', event)">Umum (JOSJIS)</button>
-</div>
-    </div>
+      <!-- Tab Filter Jenjang -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto;">
+        <button class="tab-btn lb-tab active" onclick="filterLeaderboard('all', event)">Semua</button>
+        <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD13', event)">SD 1-3</button>
+        <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD46', event)">SD 4-6</button>
+        <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMP', event)">SMP</button>
+        <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMA', event)">SMA</button>
+        <button class="tab-btn lb-tab tab-btn-hardcore" onclick="filterLeaderboard('UMUM', event)">🔥 Umum (JOSJIS)</button>
+      </div>
 
-    <!-- Tampilan Tabel Hasil -->
-    <div id="leaderboardContent" style="background: #fff; border-radius: 12px; border: 1px solid var(--rule); overflow-x: auto; padding: 16px;">
-      <p style="text-align: center; color: var(--ink-soft);">Memuat data peserta...</p>
-    </div>
+      <!-- Tampilan Tabel Hasil -->
+      <div id="leaderboardContent" style="background: #fff; border-radius: 12px; border: 1px solid var(--rule); overflow-x: auto; padding: 16px;">
+        <p style="text-align: center; color: var(--ink-soft);">Memuat data peserta...</p>
+      </div>
 
+    </div>
   </div>
-</div>
+
   <!-- ===================== LANDING PAGE ===================== -->
   <div id="view-landing" class="view active">
     <div class="wrap">
@@ -66,8 +66,8 @@
           
           <div class="hero-stats">
             <div class="stat-item">
-              <span class="stat-num">4+</span>
-              <span class="stat-lbl">Tingkat Sekolah</span>
+              <span class="stat-num">5+</span>
+              <span class="stat-lbl">Tingkat Sekolah & Umum</span>
             </div>
             <div class="stat-item">
               <span class="stat-num">🔊 Audio</span>
@@ -112,11 +112,11 @@
           <button class="tab-btn" onclick="filterCatalog('SD46', event)">🟢 SD Besar (Kelas 4-6)</button>
           <button class="tab-btn" onclick="filterCatalog('SMP', event)">🔵 SMP (Kelas 7-9)</button>
           <button class="tab-btn" onclick="filterCatalog('SMA', event)">🟣 SMA (Kelas 10-12)</button>
-       <button class="tab-btn tab-btn-hardcore" onclick="filterCatalog('UMUM', event)">
-          <span class="fire-icon">🔥</span> 
-          <span class="glow-text">UMUM (Awas Kepala Berasap)</span> 
-          <span class="skull-badge">☠️ HARD</span>
-      </button>
+          <button class="tab-btn tab-btn-hardcore" onclick="filterCatalog('UMUM', event)">
+            <span class="fire-icon">🔥</span> 
+            <span class="glow-text">UMUM (Awas Kepala Berasap)</span> 
+            <span class="skull-badge">☠️ HARD</span>
+          </button>
         </div>
 
         <div class="catalog-grid" id="catalogGrid"></div>
@@ -234,63 +234,63 @@
   </div>
 
   <!-- Custom Exit Confirmation Modal -->
-<div class="modal-overlay" id="exitModal">
-  <div class="modal-content modal-confirm">
-    <div class="confirm-icon">⚠️</div>
-    <h3>Yakin Ingin Keluar?</h3>
-    <p>Progres kuis yang sedang kamu kerjakan akan hilang dan tidak tersimpan.</p>
-    <div class="confirm-actions">
-      <button class="btn btn-ghost" onclick="closeExitModal()">Lanjutkan Gasskeun</button>
-      <button class="btn btn-red" onclick="confirmExit()">Ya, Byee</button>
+  <div class="modal-overlay" id="exitModal">
+    <div class="modal-content modal-confirm">
+      <div class="confirm-icon">⚠️</div>
+      <h3>Yakin Ingin Keluar?</h3>
+      <p>Progres kuis yang sedang kamu kerjakan akan hilang dan tidak tersimpan.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" onclick="closeExitModal()">Lanjutkan Gasskeun</button>
+        <button class="btn btn-red" onclick="confirmExit()">Ya, Byee</button>
+      </div>
     </div>
   </div>
-</div>
-<!-- ===================== MODAL REGISTRASI ===================== -->
-<div id="regModal" class="modal-overlay">
-  <div class="modal-box">
-    <h2 style="margin-top:0;">Isi Identitas dulu biar Josjis</h2>
-    <p id="regPkgTitle" style="color:var(--ink-soft); font-size:14px; margin-bottom:16px;"></p>
-    
-    <form onsubmit="submitRegistration(event)">
-      <!-- Input Nama -->
-      <div style="margin-bottom: 12px; text-align: left;">
-        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 4px;">Nama Lengkap</label>
-        <input type="text" id="regName" placeholder="Masukkan nama kamu..." required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-      </div>
 
-      <!-- Input Kelas (Teks / Angka) -->
-      <div style="margin-bottom: 16px; text-align: left;">
-        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 4px;">Kelas</label>
-        <input type="text" id="regClass" placeholder="Contoh: 2 SD / 8 SMP / 11 SMA" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-      </div>
-
-      <!-- Pilihan Mode -->
-      <div style="margin-bottom: 20px; text-align: left;">
-        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 8px;">Pilih Mode Sinahu</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <label class="mode-card">
-            <input type="radio" name="quizMode" value="belajar" checked>
-            <div style="font-size:13.5px; font-weight:bold;">📖 Mode Belajar</div>
-            <div style="font-size:12px; color:#666;">10 Soal • Tanpa Timer</div>
-          </label>
-          <label class="mode-card">
-            <input type="radio" name="quizMode" value="tes">
-            <div style="font-size:13.5px; font-weight:bold;">⏱️ Mode Tes</div>
-            <div style="font-size:12px; color:#666;">20 Soal • Timer 15 Mins</div>
-          </label>
+  <!-- ===================== MODAL REGISTRASI ===================== -->
+  <div id="regModal" class="modal-overlay">
+    <div class="modal-box">
+      <h2 style="margin-top:0;">Isi Identitas dulu biar Josjis</h2>
+      <p id="regPkgTitle" style="color:var(--ink-soft); font-size:14px; margin-bottom:16px;"></p>
+      
+      <form onsubmit="submitRegistration(event)">
+        <!-- Input Nama -->
+        <div style="margin-bottom: 12px; text-align: left;">
+          <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 4px;">Nama Lengkap</label>
+          <input type="text" id="regName" placeholder="Masukkan nama kamu..." required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
         </div>
-      </div>
 
-      <div style="display: flex; gap: 8px;">
-        <button type="button" class="btn" onclick="closeRegModal()" style="background:#eee; color:#333;">Skip</button>
-        <button type="submit" class="btn btn-primary" style="flex:1;">GASSKEUNN!! 🚀</button>
-      </div>
-    </form>
+        <!-- Input Kelas (Teks / Angka) -->
+        <div style="margin-bottom: 16px; text-align: left;">
+          <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 4px;">Kelas / Pekerjaan</label>
+          <input type="text" id="regClass" placeholder="Contoh: 2 SD / 8 SMP / 11 SMA / Umum" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+        </div>
+
+        <!-- Pilihan Mode -->
+        <div style="margin-bottom: 20px; text-align: left;">
+          <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 8px;">Pilih Mode Sinahu</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <label class="mode-card">
+              <input type="radio" name="quizMode" value="belajar" checked>
+              <div style="font-size:13.5px; font-weight:bold;">📖 Mode Belajar</div>
+              <div style="font-size:12px; color:#666;">10 Soal • Tanpa Timer</div>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="quizMode" value="tes">
+              <div style="font-size:13.5px; font-weight:bold;">⏱️ Mode Tes</div>
+              <div style="font-size:12px; color:#666;">20 Soal • Timer 15 Mins</div>
+            </label>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn" onclick="closeRegModal()" style="background:#eee; color:#333;">Skip</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;">GASSKEUNN!! 🚀</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
-  
-  
-<!-- Library Supabase JS Client -->
+
+  <!-- Library Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- File JavaScript Aplikasi Kamu -->
