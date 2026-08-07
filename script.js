@@ -1,3 +1,15 @@
+/* ===================== KONEKSI SUPABASE ===================== */
+const SUPABASE_URL = 'https://kcskkvvvppccjowroopx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtjc2trdnZ2cHBjY2pvd3Jvb3B4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNjA5NjYsImV4cCI6MjEwMTYzNjk2Nn0.vX6zrEXc6uirLCYlGc8BqTBypDUzpjGyanQSADwhzPs';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ===================== DATA PAKET ===================== */
+const packages = [
+  { id: 'sd-vocab', title: 'Kosakata Sehari-hari (Daily Vocab)', level: 'SD13', count: 20, desc: 'Mengenal nama buah, hewan, & benda sekitar' },
+  { id: 'sd-basic', title: 'Grammar Dasar & Vocabulary', level: 'SD46', count: 20, desc: 'Latihan dasar kata kerja & penyusunan kalimat' },
+  { id: 'smp-tenses', title: 'Simple Present & Past Tense', level: 'SMP', count: 20, desc: 'Latihan tenses untuk percakapan harian' },
+  { id: 'sma-advanced', title: 'Conditional & Passive Voice', level: 'SMA', count: 20, desc: 'Persiapan ujian & pemahaman tingkat lanjut' }
+];
 /* ===================== DATA PAKET & SOAL ===================== */
 const packages = [
   { id: 'sd-vocab', title: 'Kosakata Sehari-hari (Daily Vocab)', level: 'SD13', count: 5, desc: 'Mengenal nama buah, hewan, & benda sekitar' },
@@ -103,22 +115,49 @@ function renderCatalog(filter = 'all') {
 }
 
 /* ===================== QUIZ ENGINE ===================== */
-function startQuiz(pkgId) {
+async function startQuiz(pkgId) {
   currentPkg = packages.find(p => p.id === pkgId);
-  currentQuestions = questionBank[pkgId] || defaultQuestions;
-  qIndex = 0;
-  userAnswers = {};
-  eliminatedOptions = {};
-  bookmarkedQuestions.clear();
-  
-  // Reset Timer
-  timerSeconds = 0;
-  if(timerOn) startTimerInterval();
-
   showView('view-quiz');
-  renderQuestion();
-}
+  
+  // Tampilan loading sementara
+  document.getElementById('qText').textContent = 'Memuat soal dari database...';
+  document.getElementById('optionsWrap').innerHTML = '';
 
+  try {
+    // 1. Ambil seluruh bank soal sesuai level (misal 'SMA') dari Supabase
+    const { data: allQuestions, error } = await supabaseClient
+      .from('questions')
+      .select('*')
+      .eq('level', currentPkg.level);
+
+    if (error || !allQuestions || allQuestions.length === 0) {
+      alert('Gagal memuat soal dari database atau soal belum diisi!');
+      showView('view-landing');
+      return;
+    }
+
+    // 2. Acak 100 soal tersebut dan ambil 20 soal saja
+    currentQuestions = getRandom20(allQuestions);
+
+    // 3. Reset State Kuis
+    qIndex = 0;
+    userAnswers = {};
+    eliminatedOptions = {};
+    bookmarkedQuestions.clear();
+    
+    // Reset Timer
+    timerSeconds = 0;
+    if (timerOn) startTimerInterval();
+
+    // 4. Render Soal Pertama
+    renderQuestion();
+
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Terjadi kesalahan koneksi ke database.');
+    showView('view-landing');
+  }
+}
 function renderQuestion() {
   const q = currentQuestions[qIndex];
   document.getElementById('qProgress').textContent = `${qIndex + 1}/${currentQuestions.length}`;
@@ -424,6 +463,13 @@ function closeExitModal() {
 
 function confirmExit() {
   closeExitModal();
-  stopTimerInterval();
-  showView('view-landing');
+
+  /* Fungsi Mengacak Array & Memotong Jadi 20 Soal */
+function getRandom20(arraySoal) {
+  const shuffled = [...arraySoal];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, 20);
 }
