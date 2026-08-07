@@ -208,7 +208,50 @@
     </div>
   </div>
 </div>
+<!-- ===================== MODAL REGISTRASI ===================== -->
+<div id="regModal" class="modal-overlay">
+  <div class="modal-box">
+    <h2 style="margin-top:0;">Form Registrasi Peserta</h2>
+    <p id="regPkgTitle" style="color:var(--ink-soft); font-size:14px; margin-bottom:16px;"></p>
+    
+    <form onsubmit="submitRegistration(event)">
+      <!-- Input Nama -->
+      <div style="margin-bottom: 12px; text-align: left;">
+        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 4px;">Nama Lengkap</label>
+        <input type="text" id="regName" placeholder="Masukkan nama kamu..." required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+      </div>
 
+      <!-- Input Kelas (Teks / Angka) -->
+      <div style="margin-bottom: 16px; text-align: left;">
+        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 4px;">Kelas</label>
+        <input type="text" id="regClass" placeholder="Contoh: 2 SD / 8 SMP / 11 SMA" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+      </div>
+
+      <!-- Pilihan Mode -->
+      <div style="margin-bottom: 20px; text-align: left;">
+        <label style="font-weight: bold; font-size: 13.5px; display: block; margin-bottom: 8px;">Pilih Mode Latihan</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <label class="mode-card">
+            <input type="radio" name="quizMode" value="belajar" checked>
+            <div style="font-size:13.5px; font-weight:bold;">📖 Mode Belajar</div>
+            <div style="font-size:12px; color:#666;">10 Soal • Tanpa Timer</div>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="quizMode" value="tes">
+            <div style="font-size:13.5px; font-weight:bold;">⏱️ Mode Tes</div>
+            <div style="font-size:12px; color:#666;">20 Soal • Timer 15 Mins</div>
+          </label>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn" onclick="closeRegModal()" style="background:#eee; color:#333;">Batal</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;">Mulai Kerjakan 🚀</button>
+      </div>
+    </form>
+  </div>
+</div>
+  
 <!-- Library Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
