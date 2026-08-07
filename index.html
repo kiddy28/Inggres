@@ -16,6 +16,35 @@
 </head>
 <body>
 
+  <!-- ===================== VIEW REKAP HASIL PESERTA ===================== -->
+<div id="view-leaderboard" class="view">
+  <div style="max-width: 900px; margin: 0 auto; padding: 20px 10px;">
+    
+    <!-- Header Page -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h2 style="margin: 0;">🏆 Rekap Hasil & Peringkat Peserta</h2>
+        <p style="margin: 4px 0 0; color: var(--ink-soft); font-size: 14px;">Daftar nilai peserta berdasarkan jenjang latihan</p>
+      </div>
+      <button class="btn" onclick="showView('view-landing')">← Kembali ke Beranda</button>
+    </div>
+
+    <!-- Tab Filter Jenjang -->
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; pb-2;">
+      <button class="tab-btn lb-tab active" onclick="filterLeaderboard('all', event)">Semua</button>
+      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD13', event)">SD 1-3</button>
+      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SD46', event)">SD 4-6</button>
+      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMP', event)">SMP</button>
+      <button class="tab-btn lb-tab" onclick="filterLeaderboard('SMA', event)">SMA</button>
+    </div>
+
+    <!-- Tampilan Tabel Hasil -->
+    <div id="leaderboardContent" style="background: #fff; border-radius: 12px; border: 1px solid var(--rule); overflow-x: auto; padding: 16px;">
+      <p style="text-align: center; color: var(--ink-soft);">Memuat data peserta...</p>
+    </div>
+
+  </div>
+</div>
   <!-- ===================== LANDING PAGE ===================== -->
   <div id="view-landing" class="view active">
     <div class="wrap">
@@ -23,6 +52,7 @@
         <div class="logo">Sinahub <span class="logo-tag">Edu</span></div>
         <div class="nav-menu">
           <button class="btn btn-ghost" onclick="scrollToCatalog()">Cek Paket Sinahu</button>
+          <button class="btn btn-secondary" onclick="openLeaderboardView()">🏆 Lihat Hasil Peserta</button>
         </div>
       </header>
 
