@@ -386,3 +386,9 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 800 !important;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
+/* Styling Badge Khusus Paket TOEFL */
+.badge-toefl-structure,
+.badge-toefl-reading {
+  background-color: #f59e0b; /* Warna Oranye / Amber */
+  color: #ffffff;
+}
