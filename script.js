@@ -203,7 +203,11 @@ function renderQuestion() {
   }
 
   const qTextEl = document.getElementById('qText');
-  qTextEl.textContent = q.text;
+  
+  // Mengubah format markdown **teks** menjadi <strong>teks</strong> agar tampil tebal dan bersih dari bintang
+  const formattedText = q.text ? q.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : '';
+  
+  qTextEl.innerHTML = formattedText;
   qTextEl.style.fontSize = currentFontSize + 'px';
   qTextEl.style.whiteSpace = 'pre-line'; // Agar paragraf/kutipan bacaan tercetak rapi
 
