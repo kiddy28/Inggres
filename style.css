@@ -392,3 +392,70 @@ button { font-family: inherit; cursor: pointer; }
   background-color: #f59e0b; /* Warna Oranye / Amber */
   color: #ffffff;
 }
+
+/* ===================== BRANDING & HEADER LOGO ===================== */
+.nav-inner { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 16px 0; 
+}
+
+/* Wrapper Utama Logo & Teks */
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Gambar Logo */
+.brand-logo-img {
+  height: 48px; /* Ukuran proporsional dengan header */
+  width: auto;
+  object-fit: contain;
+}
+
+/* Pembungkus Teks Brand */
+.brand-text-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Baris Judul & Badge Edu */
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.1;
+}
+
+/* Judul Sinahub (Font: Outfit Bold) */
+.brand-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--ink, #2C3E50);
+  letter-spacing: -0.5px;
+}
+
+/* Badge Edu */
+.logo-tag { 
+  background: #E67E22; 
+  color: #fff; 
+  font-size: 11px; 
+  font-weight: 800;
+  padding: 2px 7px; 
+  border-radius: 6px; 
+  text-transform: uppercase;
+}
+
+/* Tagline Subtitle (Font: Plus Jakarta Sans) */
+.brand-tagline {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft, #5A6B7C);
+  margin-top: 2px;
+  letter-spacing: 0.2px;
+}
