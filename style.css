@@ -459,3 +459,23 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: 2px;
   letter-spacing: 0.2px;
 }
+/* ===================== TOMBOL LIHAT HASIL CUSTOM ===================== */
+.btn-leaderboard-custom {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #818cf8 !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 800 !important;
+}
+
+.btn-leaderboard-custom:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+  border-color: #c7d2fe !important;
+}
+
+.btn-leaderboard-custom:active {
+  transform: translateY(1px);
+}
