@@ -320,6 +320,18 @@
   </div>
 </div>
 
+  <!-- Modal Peringatan Cooldown / Spam -->
+<div class="modal-overlay" id="cooldownModal">
+  <div class="modal-content modal-confirm">
+    <div class="confirm-icon">⏳</div>
+    <h3>Harap Sabar Ya!</h3>
+    <p id="cooldownMsg">Kamu harus menunggu beberapa menit lagi sebelum bisa memulai kuis kembali untuk mencegah spam.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-primary" onclick="closeCooldownModal()" style="width:100%;">Mengerti, Siap!</button>
+    </div>
+  </div>
+</div>
+
   <!-- Library Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
