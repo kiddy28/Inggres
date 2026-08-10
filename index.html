@@ -297,6 +297,8 @@
           </div>
         </div>
 
+    
+        
         <div style="display: flex; gap: 8px;">
           <button type="button" class="btn" onclick="closeRegModal()" style="background:#eee; color:#333;">Skip</button>
           <button type="submit" class="btn btn-primary" style="flex:1;">GASSKEUNN!! 🚀</button>
@@ -304,6 +306,18 @@
       </form>
     </div>
   </div>
+      <!-- Modal Konfirmasi Selesai Kuis -->
+        <div class="modal-overlay" id="finishModal">
+          <div class="modal-content modal-confirm">
+            <div class="confirm-icon">🏁</div>
+            <h3>Yakin Selesai?</h3>
+            <p id="finishMsg">Pastikan semua soal sudah terisi dengan benar sebelum mengumpulkan jawaban.</p>
+            <div class="confirm-actions">
+              <button class="btn btn-ghost" onclick="closeFinishModal()">Cek Lagi</button>
+              <button class="btn btn-primary" onclick="proceedFinish()">Kumpulkan Jawaban</button>
+            </div>
+          </div>
+        </div>
 
   <!-- Library Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
