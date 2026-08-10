@@ -37,6 +37,7 @@ let lbAllDataCache = [];
 // Countdown Timer State
 let timerSeconds = 900; 
 let timerInterval = null;
+let unansListGlobal = [];
 
 /* ===================== HELPER FUNCTIONS ===================== */
 function getRandomN(arraySoal, count) {
@@ -113,7 +114,6 @@ function renderCatalog(filter = 'all') {
 
 /* ===================== MODAL REGISTRASI DENGAN COOLDOWN 10 MENIT ===================== */
 function startQuiz(pkgId) {
-  // Cek apakah user terkena cooldown 10 menit (spam protection)
   const lastSubmitTime = localStorage.getItem('sinahub_last_submit');
   if (lastSubmitTime) {
     const elapsedMinutes = (Date.now() - parseInt(lastSubmitTime)) / (1000 * 60);
@@ -142,7 +142,6 @@ function closeRegModal() {
 function submitRegistration(event) {
   event.preventDefault();
   
-  // Set waktu cooldown 10 menit ke localStorage
   localStorage.setItem('sinahub_last_submit', Date.now().toString());
 
   userName = document.getElementById('regName').value;
@@ -290,7 +289,6 @@ function renderQuestion() {
 function selectOption(idx) {
   if (userAnswers[qIndex]?.checked) return;
 
-  // Pastikan struktur objek tersimpan dengan benar dan jelas
   userAnswers[qIndex] = { 
     selected: idx, 
     checked: false 
@@ -401,7 +399,6 @@ function nextQuestion() {
     qIndex++; 
     renderQuestion(); 
   } else { 
-    // Cek apakah semua soal sudah dijawab sebelum menyelesaikan kuis
     checkAndFinishQuiz(); 
   }
 }
@@ -431,11 +428,7 @@ function jumpToQuestion(i) {
   renderQuestion();
 }
 
-/* ===================== VALIDASI SEMUA SOAL TERJAWAB & KONFIRMASI ===================== */
-function checkAndFinishQuiz() {
-  // 1. Cek apakah ada soal yang belum dijawab / dipilih opsinya
- let unansListGlobal = [];
-
+/* ===================== VALIDASI SEMUA SOAL TERJAWAB & MODAL KUSTOM ===================== */
 function checkAndFinishQuiz() {
   unansListGlobal = [];
   currentQuestions.forEach((_, i) => {
@@ -444,36 +437,43 @@ function checkAndFinishQuiz() {
       unansListGlobal.push(i + 1);
     }
   });
-const modal = document.getElementById('finishModal');
+
+  const modal = document.getElementById('finishModal');
   const iconEl = document.getElementById('finishModalIcon');
   const titleEl = document.getElementById('finishModalTitle');
   const msgEl = document.getElementById('finishMsg');
   const btnLeft = document.getElementById('finishModalBtnLeft');
   const btnRight = document.getElementById('finishModalBtnRight');
-  
-if (unansListGlobal.length > 0) {
-    // Tampilan jika masih ada soal yang kosong
+
+  if (unansListGlobal.length > 0) {
     iconEl.textContent = '⚠️';
     titleEl.textContent = 'Belum Lengkap!';
     msgEl.innerHTML = `Masih ada <strong>${unansListGlobal.length} soal</strong> yang belum dijawab!<br><span style="font-size:12px; color:var(--ink-soft);">Nomor belum terisi: ${unansListGlobal.join(', ')}</span>`;
     btnLeft.textContent = 'Lengkapi Sekarang';
-    btnRight.style.display = 'none'; // Sembunyikan tombol kumpul
+    btnRight.style.display = 'none'; 
   } else {
-    // Tampilan jika semua sudah terisi (Konfirmasi Akhir)
     iconEl.textContent = '🏁';
     titleEl.textContent = 'Yakin Selesai?';
     msgEl.textContent = 'Semua soal telah terjawab. Apakah kamu yakin ingin mengumpulkan jawaban sekarang?';
     btnLeft.textContent = 'Cek Lagi';
-    btnRight.style.display = 'block'; // Tampilkan tombol kumpul
+    btnRight.style.display = 'block'; 
   }
 
   modal.classList.add('open');
 }
-  // 2. Jika semua sudah terjawab, tampilkan konfirmasi akhir
-  const confirmed = confirm("❓ Apakah kamu yakin ingin menyelesaikan kuis ini dan mengirimkan jawabannya?");
-  if (confirmed) {
-    finishQuiz();
+
+function closeFinishModal() {
+  document.getElementById('finishModal').classList.remove('open');
+  
+  if (unansListGlobal.length > 0) {
+    qIndex = unansListGlobal[0] - 1;
+    renderQuestion();
   }
+}
+
+function proceedFinish() {
+  document.getElementById('finishModal').classList.remove('open');
+  finishQuiz();
 }
 
 function forceFinishQuiz() {
@@ -529,7 +529,7 @@ function openLeaderboardView() {
 
 function filterLeaderboard(level, event) {
   activeLeaderboardFilter = level;
-  lbCurrentPage = 1; // Reset ke halaman 1 saat ganti filter
+  lbCurrentPage = 1; 
   document.querySelectorAll('#view-leaderboard .lb-tab').forEach(b => b.classList.remove('active'));
   if (event) event.currentTarget.classList.add('active');
   fetchLeaderboardData(level);
@@ -622,7 +622,6 @@ function renderLeaderboardPage() {
       </tbody>
     </table>
 
-    <!-- Menu Paging / Navigasi Halaman -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); flex-wrap: wrap; gap: 8px;">
       <span style="font-size: 13px; color: var(--ink-soft);">Menampilkan halaman <strong>${lbCurrentPage}</strong> dari <strong>${totalPages}</strong> (Total ${totalData} data)</span>
       <div style="display: flex; gap: 6px;">
@@ -714,42 +713,6 @@ function toggleRecap() {
 
 function restartQuiz() {
   initQuizEngine();
-}
-
-// Membuka modal konfirmasi kustom
-function checkAndFinishQuiz() {
-  let unansweredIndices = [];
-  currentQuestions.forEach((_, i) => {
-    const ans = userAnswers[i];
-    if (!ans || ans.selected === null || ans.selected === undefined) {
-      unansweredIndices.push(i + 1);
-    }
-  });
-
-  if (unansweredIndices.length > 0) {
-    alert(`⚠️ Masih ada ${unansweredIndices.length} soal yang belum dijawab! (Nomor: ${unansweredIndices.join(', ')})`);
-    qIndex = unansweredIndices[0] - 1;
-    renderQuestion();
-    return;
-  }
-
-  // Buka modal kustom alih-alih confirm() bawaan
-  document.getElementById('finishModal').classList.add('open');
-}
-
-function closeFinishModal() {
-  document.getElementById('finishModal').classList.remove('open');
-  
-  // Jika tadi belum lengkap, arahkan ke soal kosong pertama saat tombol ditutup
-  if (unansListGlobal.length > 0) {
-    qIndex = unansListGlobal[0] - 1;
-    renderQuestion();
-  }
-}
-
-function proceedFinish() {
-  document.getElementById('finishModal').classList.remove('open');
-  finishQuiz();
 }
 
 /* ===================== CUSTOM EXIT MODAL LOGIC ===================== */
