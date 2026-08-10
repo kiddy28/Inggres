@@ -692,6 +692,36 @@ function restartQuiz() {
   initQuizEngine();
 }
 
+// Membuka modal konfirmasi kustom
+function checkAndFinishQuiz() {
+  let unansweredIndices = [];
+  currentQuestions.forEach((_, i) => {
+    const ans = userAnswers[i];
+    if (!ans || ans.selected === null || ans.selected === undefined) {
+      unansweredIndices.push(i + 1);
+    }
+  });
+
+  if (unansweredIndices.length > 0) {
+    alert(`⚠️ Masih ada ${unansweredIndices.length} soal yang belum dijawab! (Nomor: ${unansweredIndices.join(', ')})`);
+    qIndex = unansweredIndices[0] - 1;
+    renderQuestion();
+    return;
+  }
+
+  // Buka modal kustom alih-alih confirm() bawaan
+  document.getElementById('finishModal').classList.add('open');
+}
+
+function closeFinishModal() {
+  document.getElementById('finishModal').classList.remove('open');
+}
+
+function proceedFinish() {
+  closeFinishModal();
+  finishQuiz();
+}
+
 /* ===================== CUSTOM EXIT MODAL LOGIC ===================== */
 function exitQuiz() {
   openExitModal();
