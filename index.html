@@ -306,18 +306,19 @@
       </form>
     </div>
   </div>
-      <!-- Modal Konfirmasi Selesai Kuis -->
-        <div class="modal-overlay" id="finishModal">
-          <div class="modal-content modal-confirm">
-            <div class="confirm-icon">🏁</div>
-            <h3>Yakin Selesai?</h3>
-            <p id="finishMsg">Pastikan semua soal sudah terisi dengan benar sebelum mengumpulkan jawaban.</p>
-            <div class="confirm-actions">
-              <button class="btn btn-ghost" onclick="closeFinishModal()">Cek Lagi</button>
-              <button class="btn btn-primary" onclick="proceedFinish()">Kumpulkan Jawaban</button>
-            </div>
-          </div>
-        </div>
+   
+  <!-- Modal Konfirmasi / Peringatan Selesai Kuis -->
+<div class="modal-overlay" id="finishModal">
+  <div class="modal-content modal-confirm">
+    <div class="confirm-icon" id="finishModalIcon">🏁</div>
+    <h3 id="finishModalTitle">Yakin Selesai?</h3>
+    <p id="finishMsg">Pastikan semua soal sudah terisi dengan benar sebelum mengumpulkan jawaban.</p>
+    <div class="confirm-actions" id="finishModalActions">
+      <button class="btn btn-ghost" onclick="closeFinishModal()" id="finishModalBtnLeft">Cek Lagi</button>
+      <button class="btn btn-primary" onclick="proceedFinish()" id="finishModalBtnRight">Kumpulkan</button>
+    </div>
+  </div>
+</div>
 
   <!-- Library Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
