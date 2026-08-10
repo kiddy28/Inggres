@@ -434,22 +434,41 @@ function jumpToQuestion(i) {
 /* ===================== VALIDASI SEMUA SOAL TERJAWAB & KONFIRMASI ===================== */
 function checkAndFinishQuiz() {
   // 1. Cek apakah ada soal yang belum dijawab / dipilih opsinya
-  let unansweredIndices = [];
+ let unansListGlobal = [];
+
+function checkAndFinishQuiz() {
+  unansListGlobal = [];
   currentQuestions.forEach((_, i) => {
     const ans = userAnswers[i];
     if (!ans || ans.selected === null || ans.selected === undefined) {
-      unansweredIndices.push(i + 1);
+      unansListGlobal.push(i + 1);
     }
   });
-
-  if (unansweredIndices.length > 0) {
-    alert(`⚠️ Masih ada soal yang belum dijawab! Nomor belum terisi: ${unansweredIndices.join(', ')}. Harap selesaikan semua soal terlebih dahulu.`);
-    // Lompat otomatis ke soal kosong pertama yang belum dijawab
-    qIndex = unansweredIndices[0] - 1;
-    renderQuestion();
-    return;
+const modal = document.getElementById('finishModal');
+  const iconEl = document.getElementById('finishModalIcon');
+  const titleEl = document.getElementById('finishModalTitle');
+  const msgEl = document.getElementById('finishMsg');
+  const btnLeft = document.getElementById('finishModalBtnLeft');
+  const btnRight = document.getElementById('finishModalBtnRight');
+  
+if (unansListGlobal.length > 0) {
+    // Tampilan jika masih ada soal yang kosong
+    iconEl.textContent = '⚠️';
+    titleEl.textContent = 'Belum Lengkap!';
+    msgEl.innerHTML = `Masih ada <strong>${unansListGlobal.length} soal</strong> yang belum dijawab!<br><span style="font-size:12px; color:var(--ink-soft);">Nomor belum terisi: ${unansListGlobal.join(', ')}</span>`;
+    btnLeft.textContent = 'Lengkapi Sekarang';
+    btnRight.style.display = 'none'; // Sembunyikan tombol kumpul
+  } else {
+    // Tampilan jika semua sudah terisi (Konfirmasi Akhir)
+    iconEl.textContent = '🏁';
+    titleEl.textContent = 'Yakin Selesai?';
+    msgEl.textContent = 'Semua soal telah terjawab. Apakah kamu yakin ingin mengumpulkan jawaban sekarang?';
+    btnLeft.textContent = 'Cek Lagi';
+    btnRight.style.display = 'block'; // Tampilkan tombol kumpul
   }
 
+  modal.classList.add('open');
+}
   // 2. Jika semua sudah terjawab, tampilkan konfirmasi akhir
   const confirmed = confirm("❓ Apakah kamu yakin ingin menyelesaikan kuis ini dan mengirimkan jawabannya?");
   if (confirmed) {
@@ -720,10 +739,16 @@ function checkAndFinishQuiz() {
 
 function closeFinishModal() {
   document.getElementById('finishModal').classList.remove('open');
+  
+  // Jika tadi belum lengkap, arahkan ke soal kosong pertama saat tombol ditutup
+  if (unansListGlobal.length > 0) {
+    qIndex = unansListGlobal[0] - 1;
+    renderQuestion();
+  }
 }
 
 function proceedFinish() {
-  closeFinishModal();
+  document.getElementById('finishModal').classList.remove('open');
   finishQuiz();
 }
 
