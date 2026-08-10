@@ -290,7 +290,12 @@ function renderQuestion() {
 function selectOption(idx) {
   if (userAnswers[qIndex]?.checked) return;
 
-  userAnswers[qIndex] = { selected: idx, checked: false };
+  // Pastikan struktur objek tersimpan dengan benar dan jelas
+  userAnswers[qIndex] = { 
+    selected: idx, 
+    checked: false 
+  };
+  
   renderQuestion();
 }
 
