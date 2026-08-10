@@ -19,18 +19,23 @@ let currentPkg = null;
 let currentQuestions = [];
 let qIndex = 0;
 let userAnswers = {}; 
-let eliminatedOptions = {}; // Format: { 0: Set([2, 3]) }
+let eliminatedOptions = {}; 
 let currentFontSize = 20;
 let bookmarkedQuestions = new Set();
 
 // State Peserta & Mode
 let userName = '';
 let userClass = '';
-let quizMode = 'belajar'; // 'belajar' | 'tes'
+let quizMode = 'belajar'; 
 let activeLeaderboardFilter = 'all';
 
+// State Paginasi Leaderboard
+let lbCurrentPage = 1;
+const lbPerPage = 10;
+let lbAllDataCache = [];
+
 // Countdown Timer State
-let timerSeconds = 900; // 15 menit = 900 detik
+let timerSeconds = 900; 
 let timerInterval = null;
 
 /* ===================== HELPER FUNCTIONS ===================== */
@@ -106,8 +111,19 @@ function renderCatalog(filter = 'all') {
   }).join('');
 }
 
-/* ===================== MODAL REGISTRASI ===================== */
+/* ===================== MODAL REGISTRASI DENGAN COOLDOWN 10 MENIT ===================== */
 function startQuiz(pkgId) {
+  // Cek apakah user terkena cooldown 10 menit (spam protection)
+  const lastSubmitTime = localStorage.getItem('sinahub_last_submit');
+  if (lastSubmitTime) {
+    const elapsedMinutes = (Date.now() - parseInt(lastSubmitTime)) / (1000 * 60);
+    if (elapsedMinutes < 10) {
+      const remainingMinutes = Math.ceil(10 - elapsedMinutes);
+      alert(`⚠️ Harap tunggu ${remainingMinutes} menit lagi sebelum mulai kuis atau mengisi identitas kembali (Pencegahan Spam).`);
+      return;
+    }
+  }
+
   pendingPkgId = pkgId;
   const pkg = packages.find(p => p.id === pkgId);
   const titleEl = document.getElementById('regPkgTitle');
@@ -126,6 +142,9 @@ function closeRegModal() {
 function submitRegistration(event) {
   event.preventDefault();
   
+  // Set waktu cooldown 10 menit ke localStorage
+  localStorage.setItem('sinahub_last_submit', Date.now().toString());
+
   userName = document.getElementById('regName').value;
   userClass = document.getElementById('regClass').value;
   quizMode = document.querySelector('input[name="quizMode"]:checked').value;
@@ -203,13 +222,11 @@ function renderQuestion() {
   }
 
   const qTextEl = document.getElementById('qText');
-  
-  // Mengubah format markdown **teks** menjadi <strong>teks</strong> agar tampil tebal dan bersih dari bintang
   const formattedText = q.text ? q.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : '';
   
   qTextEl.innerHTML = formattedText;
   qTextEl.style.fontSize = currentFontSize + 'px';
-  qTextEl.style.whiteSpace = 'pre-line'; // Agar paragraf/kutipan bacaan tercetak rapi
+  qTextEl.style.whiteSpace = 'pre-line';
 
   updateBookmarkUI();
 
@@ -336,7 +353,7 @@ function renderPembahasan() {
   document.getElementById('pembahasanWrap').classList.add('open');
 }
 
-/* ===================== COUNTDOWN TIMER FUNCTIONS ===================== */
+/* ===================== COUNTDOWN TIMER ===================== */
 function startTimerInterval() {
   stopTimerInterval();
   updateTimerDisplay();
@@ -348,7 +365,7 @@ function startTimerInterval() {
     if (timerSeconds <= 0) {
       stopTimerInterval();
       alert('Waktu 15 menit telah habis! Kuis akan otomatis dikumpulkan.');
-      finishQuiz();
+      forceFinishQuiz();
     }
   }, 1000);
 }
@@ -375,8 +392,13 @@ function prevQuestion() {
 }
 
 function nextQuestion() {
-  if (qIndex < currentQuestions.length - 1) { qIndex++; renderQuestion(); } 
-  else { finishQuiz(); }
+  if (qIndex < currentQuestions.length - 1) { 
+    qIndex++; 
+    renderQuestion(); 
+  } else { 
+    // Cek apakah semua soal sudah dijawab sebelum menyelesaikan kuis
+    checkAndFinishQuiz(); 
+  }
 }
 
 function togglePaletteModal() {
@@ -404,6 +426,36 @@ function jumpToQuestion(i) {
   renderQuestion();
 }
 
+/* ===================== VALIDASI SEMUA SOAL TERJAWAB & KONFIRMASI ===================== */
+function checkAndFinishQuiz() {
+  // 1. Cek apakah ada soal yang belum dijawab / dipilih opsinya
+  let unansweredIndices = [];
+  currentQuestions.forEach((_, i) => {
+    const ans = userAnswers[i];
+    if (!ans || ans.selected === null || ans.selected === undefined) {
+      unansweredIndices.push(i + 1);
+    }
+  });
+
+  if (unansweredIndices.length > 0) {
+    alert(`⚠️ Masih ada soal yang belum dijawab! Nomor belum terisi: ${unansweredIndices.join(', ')}. Harap selesaikan semua soal terlebih dahulu.`);
+    // Lompat otomatis ke soal kosong pertama yang belum dijawab
+    qIndex = unansweredIndices[0] - 1;
+    renderQuestion();
+    return;
+  }
+
+  // 2. Jika semua sudah terjawab, tampilkan konfirmasi akhir
+  const confirmed = confirm("❓ Apakah kamu yakin ingin menyelesaikan kuis ini dan mengirimkan jawabannya?");
+  if (confirmed) {
+    finishQuiz();
+  }
+}
+
+function forceFinishQuiz() {
+  finishQuiz();
+}
+
 /* ===================== FINISH & SAVE TO SUPABASE ===================== */
 async function finishQuiz() {
   stopTimerInterval();
@@ -420,7 +472,6 @@ async function finishQuiz() {
   const userGreeting = userName ? `Kerja bagus, <strong>${userName}</strong> (${userClass})!` : '';
   document.getElementById('scoreStats').innerHTML = `${userGreeting}<br>Kamu menjawab benar <strong>${correctCount}</strong> dari <strong>${currentQuestions.length}</strong> soal.`;
 
-  // === SIMPAN DATA REKAP KE SUPABASE ===
   try {
     await supabaseClient.from('quiz_results').insert([
       {
@@ -445,14 +496,16 @@ async function finishQuiz() {
   renderRecapData('all');
 }
 
-/* ===================== LEADERBOARD / HASIL PESERTA ===================== */
+/* ===================== LEADERBOARD / HASIL PESERTA DENGAN PAGING ===================== */
 function openLeaderboardView() {
   showView('view-leaderboard');
+  lbCurrentPage = 1;
   fetchLeaderboardData('all');
 }
 
 function filterLeaderboard(level, event) {
   activeLeaderboardFilter = level;
+  lbCurrentPage = 1; // Reset ke halaman 1 saat ganti filter
   document.querySelectorAll('#view-leaderboard .lb-tab').forEach(b => b.classList.remove('active'));
   if (event) event.currentTarget.classList.add('active');
   fetchLeaderboardData(level);
@@ -486,49 +539,79 @@ async function fetchLeaderboardData(levelFilter = 'all') {
       return;
     }
 
-    // Render Tabel
-    container.innerHTML = `
-      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:14px;">
-        <thead>
-          <tr style="border-bottom:2px solid var(--rule); color:var(--ink-soft);">
-            <th style="padding:10px;">Tanggal</th>
-            <th style="padding:10px;">Nama</th>
-            <th style="padding:10px;">Kelas</th>
-            <th style="padding:10px;">Jenjang</th>
-            <th style="padding:10px;">Mode</th>
-            <th style="padding:10px; text-align:center;">Skor</th>
-            <th style="padding:10px; text-align:center;">Nilai</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map(item => {
-            const dateStr = new Date(item.created_at).toLocaleDateString('id-ID', {
-              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-            });
-            
-            let badgeText = (item.package_level || '').replace('SD13','SD 1-3').replace('SD46','SD 4-6');
-            if ((item.package_level || '').startsWith('TOEFL_') || item.package_level === 'UMUM') badgeText = '🔥 UMUM';
-
-            return `
-              <tr style="border-bottom:1px solid var(--rule);">
-                <td style="padding:12px 10px; font-size:12px; color:var(--ink-soft);">${dateStr}</td>
-                <td style="padding:12px 10px; font-weight:bold;">${item.user_name}</td>
-                <td style="padding:12px 10px;">${item.user_class}</td>
-                <td style="padding:12px 10px;"><span class="badge-level badge-${(item.package_level || '').toLowerCase().replace('_','-')}">${badgeText}</span></td>
-                <td style="padding:12px 10px; text-transform:capitalize;">${item.quiz_mode}</td>
-                <td style="padding:12px 10px; text-align:center;">${item.score}/${item.total_questions}</td>
-                <td style="padding:12px 10px; text-align:center; font-weight:bold; color:${item.accuracy >= 70 ? 'var(--green)' : 'var(--red)'};">${item.accuracy}%</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
-    `;
+    lbAllDataCache = data;
+    renderLeaderboardPage();
 
   } catch (err) {
     console.error(err);
     container.innerHTML = `<p style="text-align:center; color: var(--red);">Terjadi kesalahan koneksi.</p>`;
   }
+}
+
+function renderLeaderboardPage() {
+  const container = document.getElementById('leaderboardContent');
+  if (!container) return;
+
+  const totalData = lbAllDataCache.length;
+  const totalPages = Math.ceil(totalData / lbPerPage) || 1;
+  if (lbCurrentPage > totalPages) lbCurrentPage = totalPages;
+  if (lbCurrentPage < 1) lbCurrentPage = 1;
+
+  const startIdx = (lbCurrentPage - 1) * lbPerPage;
+  const endIdx = startIdx + lbPerPage;
+  const paginatedData = lbAllDataCache.slice(startIdx, endIdx);
+
+  container.innerHTML = `
+    <table style="width:100%; border-collapse:collapse; text-align:left; font-size:14px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--rule); color:var(--ink-soft);">
+          <th style="padding:10px;">Tanggal</th>
+          <th style="padding:10px;">Nama</th>
+          <th style="padding:10px;">Kelas</th>
+          <th style="padding:10px;">Jenjang</th>
+          <th style="padding:10px;">Mode</th>
+          <th style="padding:10px; text-align:center;">Skor</th>
+          <th style="padding:10px; text-align:center;">Nilai</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${paginatedData.map(item => {
+          const dateStr = new Date(item.created_at).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+          });
+          
+          let badgeText = (item.package_level || '').replace('SD13','SD 1-3').replace('SD46','SD 4-6');
+          if ((item.package_level || '').startsWith('TOEFL_') || item.package_level === 'UMUM') badgeText = '🔥 UMUM';
+
+          return `
+            <tr style="border-bottom:1px solid var(--rule);">
+              <td style="padding:12px 10px; font-size:12px; color:var(--ink-soft);">${dateStr}</td>
+              <td style="padding:12px 10px; font-weight:bold;">${item.user_name}</td>
+              <td style="padding:12px 10px;">${item.user_class}</td>
+              <td style="padding:12px 10px;"><span class="badge-level badge-${(item.package_level || '').toLowerCase().replace('_','-')}">${badgeText}</span></td>
+              <td style="padding:12px 10px; text-transform:capitalize;">${item.quiz_mode}</td>
+              <td style="padding:12px 10px; text-align:center;">${item.score}/${item.total_questions}</td>
+              <td style="padding:12px 10px; text-align:center; font-weight:bold; color:${item.accuracy >= 70 ? 'var(--green)' : 'var(--red)'};">${item.accuracy}%</td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <!-- Menu Paging / Navigasi Halaman -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); flex-wrap: wrap; gap: 8px;">
+      <span style="font-size: 13px; color: var(--ink-soft);">Menampilkan halaman <strong>${lbCurrentPage}</strong> dari <strong>${totalPages}</strong> (Total ${totalData} data)</span>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn btn-sm btn-ghost" ${lbCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="changeLeaderboardPage(lbCurrentPage - 1)">← Prev</button>
+        <button class="btn btn-sm btn-ghost" ${lbCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''} onclick="changeLeaderboardPage(lbCurrentPage + 1)">Next →</button>
+      </div>
+    </div>
+  `;
+}
+
+function changeLeaderboardPage(targetPage) {
+  lbCurrentPage = targetPage;
+  renderLeaderboardPage();
 }
 
 /* ===================== EXTRA TOOLS & RECAP ===================== */
