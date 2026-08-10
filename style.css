@@ -460,20 +460,27 @@ button { font-family: inherit; cursor: pointer; }
   letter-spacing: 0.2px;
 }
 /* ===================== TOMBOL LIHAT HASIL CUSTOM ===================== */
+Agar tombol "Lihat Hasil Sinahu" tidak menyaru dengan latar belakang dan memiliki garis luar (*outline*) yang tegas serta kontras, kita bisa mengubah kombinasi warna dasarnya menjadi warna solid yang cerah (misalnya oranye keemasan atau hijau tua) dengan outline yang tebal.
+
+Tambahkan kode CSS berikut ke dalam file **`style.css`**:
+
+```css
+/* ===================== TOMBOL LIHAT HASIL - KONTRAS & OUTLINE ===================== */
 .btn-leaderboard-custom {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-  color: #ffffff !important;
-  border: 2px solid #818cf8 !important;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #FEF9E7 !important; /* Warna dasar kuning lembut bernuansa juara */
+  color: #D35400 !important;      /* Teks warna oranye gelap kontras */
+  border: 2px solid #F39C12 !important; /* Outline/garis luar tegas berwarna emas */
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.25);
   font-weight: 800 !important;
+  transition: all 0.2s ease;
 }
 
 .btn-leaderboard-custom:hover {
+  background: #F39C12 !important;
+  color: #ffffff !important;
+  border-color: #D35400 !important;
   transform: translateY(-2px);
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
-  border-color: #c7d2fe !important;
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
 }
 
 .btn-leaderboard-custom:active {
