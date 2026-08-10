@@ -467,20 +467,21 @@ Tambahkan kode CSS berikut ke dalam file **`style.css`**:
 ```css
 /* ===================== TOMBOL LIHAT HASIL - KONTRAS & OUTLINE ===================== */
 .btn-leaderboard-custom {
-  background: #FEF9E7 !important; /* Warna dasar kuning lembut bernuansa juara */
-  color: #D35400 !important;      /* Teks warna oranye gelap kontras */
-  border: 2px solid #F39C12 !important; /* Outline/garis luar tegas berwarna emas */
-  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.25);
-  font-weight: 800 !important;
-  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #FFB347 0%, #FFCC33 100%) !important;
+  color: #78350F !important;
+  border: 2.5px solid #F59E0B !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+  font-weight: 900 !important;
+  letter-spacing: 0.3px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-leaderboard-custom:hover {
-  background: #F39C12 !important;
-  color: #ffffff !important;
-  border-color: #D35400 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #B45309 !important;
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.5);
 }
 
 .btn-leaderboard-custom:active {
