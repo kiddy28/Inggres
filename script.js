@@ -119,7 +119,12 @@ function startQuiz(pkgId) {
     const elapsedMinutes = (Date.now() - parseInt(lastSubmitTime)) / (1000 * 60);
     if (elapsedMinutes < 10) {
       const remainingMinutes = Math.ceil(10 - elapsedMinutes);
-      alert(`⚠️ Harap tunggu ${remainingMinutes} menit lagi sebelum mulai kuis atau mengisi identitas kembali (Pencegahan Spam).`);
+      
+      // Ubah teks pesan sesuai sisa waktu
+      document.getElementById('cooldownMsg').innerHTML = `⚠️ Harap tunggu sekitar <strong>${remainingMinutes} menit lagi</strong> sebelum mulai kuis atau mengisi identitas kembali (Pencegahan Spam).`;
+      
+      // Tampilkan modal kustom
+      document.getElementById('cooldownModal').classList.add('open');
       return;
     }
   }
@@ -133,7 +138,9 @@ function startQuiz(pkgId) {
   if (regModal) regModal.classList.add('open');
   else initQuizEngine();
 }
-
+function closeCooldownModal() {
+  document.getElementById('cooldownModal').classList.remove('open');
+}
 function closeRegModal() {
   const regModal = document.getElementById('regModal');
   if (regModal) regModal.classList.remove('open');
